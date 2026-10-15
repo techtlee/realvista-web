@@ -1,8 +1,8 @@
 'use client'
 
-import { createIntakeRequestSchema, type Catalog } from '@makleri/selection'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import type { Catalog } from '@/lib/catalog'
 import { CONSENT_TEXT } from '@/lib/consent'
 import {
   decodeDraft,
@@ -17,12 +17,15 @@ import {
   type SourceFacts,
 } from '@/lib/draft'
 import { mapIssue, STEP, type FieldKey, type StepIndex } from '@/lib/issues'
+import { createLeadSchema } from '@/lib/selection'
 
-import { Preview } from './Preview'
+import { DebugJson } from './DebugJson'
+import { Preview, type PreviewFocus } from './Preview'
 import { StepBrand } from './StepBrand'
 import { StepSections } from './StepSections'
 import { EMPTY_CONTACT, StepSubmit, type ContactForm } from './StepSubmit'
 import { StepTheme } from './StepTheme'
+import { Summary } from './Summary'
 
 const STEPS = [
   { title: 'Šablona a barvy', short: 'Vzhled' },
@@ -45,6 +48,9 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
   // Nothing is saved until the saved draft has been read back. Otherwise the
   // first save writes the defaults over the very link being opened.
   const [hydrated, setHydrated] = useState(false)
+  const [debug, setDebug] = useState(false)
+  const [focus, setFocus] = useState<PreviewFocus | null>(null)
+  const show = (f: Omit<PreviewFocus, 'n'>) => setFocus({ ...f, n: Date.now() })
   const previewed = useRef(new Set<string>())
   const landing = useRef<{ page: string; utm: SourceFacts['utm'] }>({ page: '/', utm: {} })
   const panelRef = useRef<HTMLDivElement>(null)
@@ -55,6 +61,7 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
   // Restore: a shared link wins over this browser's saved draft.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    setDebug(params.has('debug'))
     landing.current = {
       page: window.location.pathname,
       utm: {
@@ -113,9 +120,13 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
           : d.sections.home
       return { ...d, modules, sections: { home } }
     })
+    // Show where the switch shows up on the site.
+    if (key === 'listingMap') show({ route: { page: 'listings' } })
+    if (key === 'mortgageCalculator') show({ route: { page: 'detail', slug: 'byt-3kk-praha-7' }, ...(value ? { section: 'calculator' } : {}) })
+    if (key === 'blog') show(value ? { section: 'blog' } : {})
   }
 
-  const schema = useMemo(() => createIntakeRequestSchema(catalog), [catalog])
+  const schema = useMemo(() => createLeadSchema(catalog), [catalog])
 
   function buildBody() {
     const selection = toSelection(draft, {
@@ -282,8 +293,8 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
             </span>
           </button>
           {previewOpen && (
-            <div className="mt-3 h-[28rem]">
-              <Preview draft={draft} swatch={swatch} />
+            <div className="mt-3 h-[34rem]">
+              <Preview draft={draft} swatch={swatch} focus={focus} initialDevice="mobile" />
             </div>
           )}
         </div>
@@ -304,7 +315,10 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
             draft={draft}
             available={theme.homeSections}
             onModule={setModule}
-            onSections={(home) => setDraft((d) => ({ ...d, sections: { home } }))}
+            onSections={(home, touched) => {
+              setDraft((d) => ({ ...d, sections: { home } }))
+              show(touched ? { section: touched } : {})
+            }}
           />
         )}
         {step === STEP.brand && (
@@ -312,11 +326,17 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
             draft={draft}
             errors={errors}
             onBrand={(patch) => setDraft((d) => ({ ...d, brand: { ...d.brand, ...patch } }))}
-            onTone={(tone) => setDraft((d) => ({ ...d, content: { tone } }))}
+            onTone={(tone) => {
+              setDraft((d) => ({ ...d, content: { tone } }))
+              show({ section: draft.sections.home.includes('hero') ? 'hero' : draft.sections.home[0] })
+            }}
           />
         )}
         {step === STEP.submit && (
-          <StepSubmit form={contact} errors={errors} onChange={(patch) => setContact((c) => ({ ...c, ...patch }))} />
+          <div className="space-y-6">
+            <Summary draft={draft} catalog={catalog} onEdit={goTo} />
+            <StepSubmit form={contact} errors={errors} onChange={(patch) => setContact((c) => ({ ...c, ...patch }))} />
+          </div>
         )}
 
         {errors.form && (
@@ -350,9 +370,15 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
 
       <div className="hidden lg:block">
         <div className="sticky top-6 h-[min(44rem,calc(100vh-3rem))]">
-          <Preview draft={draft} swatch={swatch} />
+          <Preview draft={draft} swatch={swatch} focus={focus} />
         </div>
       </div>
+
+      {debug && (
+        <div className="lg:col-span-2">
+          <DebugJson value={buildBody()} />
+        </div>
+      )}
     </div>
   )
 }

@@ -10,15 +10,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@makleri/selection": "link:../platform/packages/selection",
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "server-only": "^0.0.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@makleri/config": "link:../platform/packages/config",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",

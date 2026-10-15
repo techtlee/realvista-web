@@ -23,7 +23,8 @@ export function StepSections({
   /** Every home section the theme offers, in its default order. */
   available: string[]
   onModule: (key: keyof Modules, value: boolean) => void
-  onSections: (home: string[]) => void
+  /** `touched` is the section the realtor just acted on, so the preview can show it. */
+  onSections: (home: string[], touched?: string) => void
 }) {
   const visible = draft.sections.home
   const hidden = available.filter((s) => !visible.includes(s) && (s !== 'blog' || draft.modules.blog))
@@ -36,7 +37,7 @@ export function StepSections({
     if (i < 0 || j < 0 || j >= visible.length) return
     const next = [...visible]
     ;[next[i], next[j]] = [next[j] as string, next[i] as string]
-    onSections(next)
+    onSections(next, id)
     setAnnounce(`${sectionLabel(id)}: pozice ${j + 1} z ${visible.length}`)
   }
 
@@ -47,7 +48,7 @@ export function StepSections({
   }
 
   function show(id: string) {
-    onSections([...visible, id])
+    onSections([...visible, id], id)
     setAnnounce(`${sectionLabel(id)} přidáno na konec`)
   }
 
@@ -59,7 +60,7 @@ export function StepSections({
     const to = visible.indexOf(target)
     const next = visible.filter((s) => s !== dragging)
     next.splice(to, 0, dragging)
-    onSections(next)
+    onSections(next, dragging)
   }
 
   return (

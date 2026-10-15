@@ -33,12 +33,6 @@ interface IssueLike {
 export function mapIssue(issue: IssueLike): MappedIssue | null {
   const p = (issue.path ?? []).map(String).join('.')
 
-  // The v1 storefront does not ask for these; the qualification call does.
-  // Until @makleri/selection makes them optional, the shared schema reports
-  // them missing — that is not something the realtor can fix, so it is not
-  // shown. The CMS will still refuse, and that surfaces as a form error.
-  if (p.startsWith('selection.domain') || p.startsWith('selection.plan')) return null
-
   if (p === 'website') return { step: STEP.submit, field: 'form', message: 'Odeslání se nezdařilo.' }
   if (p.startsWith('contact.name')) return at('submit', 'contact.name', 'Vyplňte jméno a příjmení.')
   if (p.startsWith('contact.email')) return at('submit', 'contact.email', 'Zadejte platný e-mail.')

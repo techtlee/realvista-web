@@ -1,7 +1,6 @@
-import { PORTFOLIO_SIZES } from '@makleri/selection'
-
 import { CONSENT_TEXT } from '@/lib/consent'
 import type { FieldKey } from '@/lib/issues'
+import { PORTFOLIO_SIZES } from '@/lib/selection'
 
 import { Field } from './StepBrand'
 

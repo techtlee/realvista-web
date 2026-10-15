@@ -1,4 +1,5 @@
-import type { Catalog, CatalogTheme, SelectionV1Input } from '@makleri/selection'
+import type { Catalog, CatalogTheme } from './catalog'
+import { TONES, type SelectionV1 } from './selection'
 
 /**
  * What the realtor is configuring, shaped like the selection JSON from the
@@ -18,7 +19,7 @@ export interface Draft {
   content: { tone: Tone }
 }
 
-export const TONES = ['formal', 'friendly', 'neutral'] as const
+export { TONES }
 export type Tone = (typeof TONES)[number]
 
 export const TONE_LABELS: Record<Tone, { label: string; example: string }> = {
@@ -106,7 +107,7 @@ export interface SourceFacts {
 }
 
 /** The full selection JSON, as `POST /api/intake` expects it. */
-export function toSelection(draft: Draft, source: SourceFacts): SelectionV1Input {
+export function toSelection(draft: Draft, source: SourceFacts): SelectionV1 {
   const tagline = draft.brand.tagline.trim()
   const utm = Object.fromEntries(Object.entries(source.utm).filter(([, v]) => v))
 
@@ -130,7 +131,7 @@ export function toSelection(draft: Draft, source: SourceFacts): SelectionV1Input
       ...(Object.keys(utm).length > 0 ? { utm } : {}),
     },
     // `domain` and `plan` are omitted on purpose — see the Draft comment.
-  } as SelectionV1Input
+  }
 }
 
 // ── sharing a draft by URL ───────────────────────────────────────────────────

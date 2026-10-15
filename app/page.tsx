@@ -3,14 +3,9 @@ import { Benefits } from '@/components/landing/Benefits'
 import { Faq } from '@/components/landing/Faq'
 import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
-import { getCatalog } from '@/lib/catalog'
+import { catalog } from '@/lib/catalog'
 
-/** Matches the CMS's own cache header on /api/themes. */
-export const revalidate = 300
-
-export default async function Home() {
-  const catalog = await getCatalog()
-
+export default function Home() {
   return (
     <>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
@@ -31,17 +26,10 @@ export default async function Home() {
           <div className="mb-10 max-w-2xl">
             <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Nastavte si svůj web</h2>
             <p className="mt-3 text-lg text-ink-soft">
-              Čtyři kroky. Náhled vpravo je skutečný web, jen s ukázkovými nemovitostmi.
+              Čtyři kroky. Náhled se mění s každým kliknutím — a dá se v něm i procházet jako ve skutečném webu.
             </p>
           </div>
-          {catalog ? (
-            <Configurator catalog={catalog} />
-          ) : (
-            <div className="rounded-2xl border border-line bg-white p-8 text-center">
-              <p className="font-medium">Konfigurátor je teď nedostupný.</p>
-              <p className="mt-2 text-ink-soft">Zkuste to prosím za chvíli, nebo nám napište e-mail.</p>
-            </div>
-          )}
+          <Configurator catalog={catalog} />
         </section>
 
         <Benefits />

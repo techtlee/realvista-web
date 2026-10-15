@@ -1,28 +1,41 @@
-import 'server-only'
-
-import type { Catalog } from '@makleri/selection'
-
 /**
- * The themes on sale, from the CMS — which derives them from the theme
- * manifests. Nothing in this repo names a theme or a colourway, so a new
- * theme or colourway reaches the storefront without a deploy here.
+ * The templates on sale, as the configurator offers them.
  *
- * Returns null rather than throwing: in production ISR keeps serving the last
- * good page, and in development the page renders an honest error state
- * instead of a 500.
+ * Static on purpose: the storefront stands alone and needs nothing running to
+ * build or serve. The values are copied from the theme manifests
+ * (platform/packages/theme-realvista/src/manifest.ts — `variants` and
+ * `sections.home`). When a theme gains a colourway or a home section, update
+ * this file too; the backend validates against the manifests and will reject
+ * a value this list offers but the theme does not have.
  */
-export async function getCatalog(): Promise<Catalog | null> {
-  const cms = process.env.CMS_URL
-  if (!cms) return null
-
-  try {
-    const res = await fetch(`${cms}/api/themes`, { next: { revalidate: 300 } })
-    if (!res.ok) return null
-
-    const body = (await res.json()) as { themes?: unknown }
-    if (!Array.isArray(body.themes) || body.themes.length === 0) return null
-    return body.themes as Catalog
-  } catch {
-    return null
-  }
+export interface CatalogVariant {
+  value: string
+  label: string
+  /** Brand colour, for swatches and the mock site. */
+  swatch: string
 }
+
+export interface CatalogTheme {
+  name: string
+  label: string
+  /** The first is the default. */
+  variants: CatalogVariant[]
+  /** Home section ids in the theme's default order. */
+  homeSections: string[]
+}
+
+export type Catalog = readonly CatalogTheme[]
+
+export const catalog: Catalog = [
+  {
+    name: 'realvista',
+    label: 'REALVISTA',
+    variants: [
+      { value: 'indigo', label: 'Indigová', swatch: '#0d0053' },
+      { value: 'crimson', label: 'Červená', swatch: '#ad0c14' },
+      { value: 'clay', label: 'Hnědá', swatch: '#1c130d' },
+      { value: 'mono', label: 'Černobílá', swatch: '#111111' },
+    ],
+    homeSections: ['hero', 'featured', 'services', 'agent', 'stats', 'contact', 'blog'],
+  },
+]

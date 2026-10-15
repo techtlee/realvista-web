@@ -1,4 +1,4 @@
-import type { Catalog } from '@makleri/selection'
+import type { Catalog } from '@/lib/catalog'
 
 import type { Draft } from '@/lib/draft'
 

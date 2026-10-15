@@ -1,104 +1,96 @@
 # Makléři — storefront
 
-The public landing page and site configurator. A realtor picks a template,
-colourway, modules, home section order, brand and tone; sees it live; and
-submits. The submission is the selection JSON from `@makleri/selection`,
-which the CMS stores on a lead.
+The public landing page and site configurator. A realtor picks a template and
+colourway, switches modules on and off, orders the homepage sections, names
+their office and picks a tone — and clicks through a mock of the site they
+are getting while they do it. The output is one JSON object: the
+configuration, sent to our backend as a lead.
+
+Standalone: no CMS, no other repo, nothing to run alongside it.
 
 ## Running it
 
 ```bash
 pnpm install
-cp .env.example .env.local   # CMS_URL, NEXT_PUBLIC_PREVIEW_URL
-pnpm dev                     # http://localhost:3004
+pnpm dev        # http://localhost:3004
 ```
 
 Port 3004 because 3000 is the CMS, 3001 the demo site, 3002 the CRM dashboard.
 
-Needs the CMS running for `GET /api/themes` and `POST /api/intake`. Without it
-the page renders and the configurator shows an "unavailable" state.
+Add `?debug` to the URL to see the exact JSON a submit would send, with copy
+and download buttons. Realtors never see it.
 
-## How it fits together
+## The output
 
+```jsonc
+{
+  "contact":  { "name": "…", "email": "…", "phone": "…" },
+  "company":  { "ico": "12345678", "name": "…" },      // optional
+  "portfolioSize": "6-20",                               // optional
+  "consent":  { "given": true, "text": "<the wording exactly as shown>" },
+  "selection": {
+    "schemaVersion": 1,
+    "capturedAt": "2026-10-15T09:55:59.537Z",
+    "theme":    { "name": "realvista", "variant": "crimson" },
+    "modules":  { "blog": true, "listingMap": true, "mortgageCalculator": false,
+                  "services": true, "references": false },
+    "sections": { "home": ["hero", "featured", "stats", "agent", "contact", "blog"] },
+    "brand":    { "name": "Novák Reality", "tagline": "…" },
+    "content":  { "tone": "friendly", "locale": "cs-CZ" },
+    "source":   { "page": "/", "previewedVariants": ["indigo", "crimson"],
+                  "utm": { "source": "seznam" } }
+  }
+}
 ```
-browser ──▶ storefront /api/poptavka-webu ──▶ CMS POST /api/intake
-                 (proxy: CMS origin stays private, no CORS, one place to rate-limit)
 
-storefront page ──(server, ISR 300 s)──▶ CMS GET /api/themes   catalog from theme manifests
+`selection` is the selection JSON v1 (`lib/selection.ts`), the same shape the
+CRM stores and later turns into the client site's `site.config.ts`. `domain`
+and `plan` are left out: they are settled in the qualification call.
 
-configurator ──iframe──▶ REALVISTA site /nahled   live preview (see contract below)
-```
+## Submitting
 
-- **Nothing here names a theme or a colourway.** Templates, swatches and the
-  default section order all come from the catalog.
-- **The draft is shaped like the selection JSON from the start** (`lib/draft.ts`),
-  so submitting is assembly, not translation. It is saved in the URL (`?k=`, a
-  shareable link) and in localStorage. A shared link wins over a saved draft.
-- **The same zod schema validates in the browser and in the CMS**, so issues
-  from either side carry the same paths. `lib/issues.ts` turns them into Czech
-  messages and the step to jump to.
-- **The blog module and the blog section are one decision.** Turning the
-  module off removes the section; turning it on brings it back.
+The browser posts to `/api/poptavka-webu`, which forwards to `LEAD_ENDPOINT`
+(the CRM's `POST /api/intake`). Server-side, so the backend URL stays private
+and no CORS is needed.
 
-## Depends on work outside this repo
+| `LEAD_ENDPOINT` | development | production |
+|---|---|---|
+| unset | JSON logged to the terminal, form reports success | 503 — never pretend a lead arrived |
+| set | forwarded, backend's answer returned | same |
 
-The configurator works today. These two make it complete; both belong in
-`platform/`.
+Backend validation errors come back as zod issues; `lib/issues.ts` maps each to
+a Czech message and the step that fixes it.
 
-### 1. The preview route — `platform/apps/site/app/nahled`
+**Backend change still needed:** the CRM's intake schema
+(`platform/packages/selection/src/schema.ts`) still *requires* `domain` and
+`plan`, so it will reject these leads until both are made optional. Tested
+against a stand-in running that real schema with the two fields relaxed: leads
+are accepted, and a filled honeypot is rejected.
 
-Until it exists, the preview panel falls back to a schematic wireframe in the
-chosen colour and section order, with a note saying so.
+## How it is built
 
-The contract (also in `lib/preview.ts`):
-
-| | |
-|---|---|
-| URL | `/nahled?varianta=<value>&sekce=<id,id,…>&blog=0\|1&mapa=0\|1&hypoteka=0\|1` |
-| Renders | `theme.pages.Home` from `@makleri/theme-kit/fixtures` (`full`), not CMS data. Unknown section ids dropped |
-| parent → iframe | `{ type: 'makleri:variant', value }` → set `data-variant` on `<html>`, no reload |
-| iframe → parent | `{ type: 'makleri:ready' }` once hydrated. Without it the storefront keeps showing the wireframe |
-| Origins | both sides check `event.origin` |
-| Gate | 404 unless `NEXT_PUBLIC_VARIANT_PREVIEW` is set — a client site must never serve it |
-| Headers | `noindex`, and **`X-Frame-Options` must be removed for this route** and replaced by `Content-Security-Policy: frame-ancestors <storefront origin>` |
-
-The headers row matters: `createNextConfig` in `@makleri/config` sends
-`X-Frame-Options: SAMEORIGIN` on every route of every site, so today the
-browser refuses to put the demo site in a frame at all.
-
-### 2. `domain` and `plan` optional in `@makleri/selection`
-
-The v1 configurator does not ask for them (they are settled in the
-qualification call), but `schema.ts` requires both, so **the CMS currently
-rejects every submission from this page** with a 400. Make both `.optional()`.
-Until then the browser deliberately ignores those two issues (`lib/issues.ts`)
-and the realtor sees a generic "could not send" error.
-
-Verified against a stand-in that runs the real catalog and the real intake
-schema: with this change simulated, a full submission is accepted, carrying
-crimson, a reordered and trimmed section list, the tone, the UTM parameters and
-every colourway previewed.
+- `lib/catalog.ts` — what is on sale: REALVISTA, four colourways, seven home
+  sections. **Copied from the theme manifest** so this repo stands alone; when
+  a theme gains a colourway or section, update it here too.
+- `lib/draft.ts` — the configuration state, shaped like the selection JSON from
+  the first click, so submitting is assembly rather than translation. Kept in
+  the URL (`?k=`, a shareable link) and localStorage.
+- `components/mock/` — the clickable mock site: home in the chosen section
+  order, listings (+ map), property detail (+ PENB badge, mortgage calculator),
+  blog. Colour from CSS variables, copy from the chosen tone
+  (`lib/tone-copy.ts`), photos generated as SVG (`Photo.tsx`) — nothing loads
+  from outside. Laid out with container queries, so the "Mobil" frame shows the
+  real phone layout with a hamburger menu.
+- `components/configurator/` — the four steps, the preview frame, the summary,
+  the debug panel. Each action tells the preview where to look: reorder a
+  section and it scrolls there and highlights it; switch on the calculator and
+  it opens a property detail.
 
 ## Before it goes public
 
-- **Rate limiting** on `/api/poptavka-webu` (Vercel firewall or Turnstile). The
-  honeypot and the strict schema stop casual spam, not a determined bot.
-- **Consent wording** in `lib/consent.ts` is a placeholder. It needs legal
-  review, the controller's name and IČO, and a link to a privacy policy page —
-  which does not exist yet (the footer says so).
-- **Product name and domain.** "Makléři" in the header is a stand-in.
-- **`link:` dependencies do not build on Vercel.** `@makleri/selection` and
-  `@makleri/config` point at `../platform`. Same blocker as the CMS; solved for
-  both by publishing the packages, which needs the git remotes first.
-- **Visual design.** The styling is a placeholder; every value the Figma design
-  will change is a token in `app/globals.css`. The Figma file is not yet
-  readable by the MCP (the connected account has View seats only).
-- **Copy.** Czech, written to be accurate rather than final. Claims made: Czech
-  admin, photos resized and stripped of location, PENB enforced, own domain with
-  a temporary one first, enquiries per listing, automatic template updates — all
-  true of the platform today. No delivery time is promised anywhere.
-
-## Follow-ups
-
-- Section labels live in `lib/sections.ts`. They belong in the theme manifest
-  next to the ids, once a second theme brings sections this list does not know.
+- **Visual design** — placeholder; every value the Figma design will change is
+  a token in `app/globals.css`.
+- **Rate limiting** on `/api/poptavka-webu` (Vercel firewall or Turnstile).
+- **Consent wording** in `lib/consent.ts` is a placeholder: needs legal review,
+  the controller's name and IČO, and a privacy policy page to link to.
+- **Product name and domain** — "Makléři" in the header is a stand-in.

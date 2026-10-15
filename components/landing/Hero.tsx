@@ -1,4 +1,4 @@
-import type { Catalog } from '@makleri/selection'
+import type { Catalog } from '@/lib/catalog'
 
 import { Wireframe } from '../configurator/Wireframe'
 
@@ -7,7 +7,7 @@ import { Wireframe } from '../configurator/Wireframe'
  * colourway on sale, read from the catalog. A new colourway appears here
  * without anyone touching this file.
  */
-export function Hero({ catalog }: { catalog: Catalog | null }) {
+export function Hero({ catalog }: { catalog: Catalog }) {
   const theme = catalog?.[0]
   const variants = theme?.variants.slice(0, 4) ?? []
 
