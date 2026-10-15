@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+/*
+ * Placeholder visual language until the Figma design is readable. Everything
+ * the design will change lives in these tokens, so applying it is mostly this
+ * block.
+ */
+@theme {
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-heading), var(--font-body), ui-sans-serif, sans-serif;
+
+  --color-ink: #16151d;
+  --color-ink-soft: #5d5b6a;
+  --color-paper: #f6f4ef;
+  --color-line: #e3e0d8;
+  --color-accent: #c8643b;
+  --color-danger: #b42318;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Browsers give fieldsets min-width: min-content, so a long row inside one
+   * pushes past its grid column instead of truncating. */
+  fieldset {
+    min-width: 0;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-base outline-none transition placeholder:text-neutral-400 focus:border-ink aria-[invalid=true]:border-danger sm:text-sm;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-ink px-6 py-3 text-sm font-semibold text-white transition hover:bg-black;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium text-ink-soft transition hover:bg-black/5 hover:text-ink;
+  }
+}
