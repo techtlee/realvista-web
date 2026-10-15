@@ -17,6 +17,44 @@
   --color-danger: #b42318;
 }
 
+/*
+ * REALVISTA, for the mock site only. A port of
+ * platform/packages/theme-realvista/styles/theme.css: the mock root sets the
+ * --rv-* properties from the chosen colourway (lib/catalog.ts), and these
+ * utilities read them at runtime, so a colour change needs no re-render of
+ * styles. `rv-` prefixed so they cannot collide with the landing page's own
+ * tokens (`accent` exists in both).
+ */
+@theme inline {
+  --color-rv-brand: var(--rv-brand);
+  --color-rv-page: var(--rv-page);
+  --color-rv-accent: var(--rv-accent);
+  --color-rv-muted: var(--rv-muted);
+  --color-rv-card: var(--rv-card);
+  --color-rv-hero-ink: var(--rv-hero-ink);
+  --color-rv-footer-ink: var(--rv-footer-ink);
+  --radius-rv-btn: 5px;
+  --radius-rv-pill: 30px;
+  --shadow-rv-card: var(--rv-shadow-card);
+  --font-rv: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.rv-track {
+  letter-spacing: 0.02em;
+}
+.rv-hero-overlay {
+  background-image: var(--rv-hero-overlay);
+}
+.rv-band-a {
+  background-image: var(--rv-band-a);
+}
+.rv-band-b {
+  background-image: var(--rv-band-b);
+}
+.rv-promo {
+  background-image: var(--rv-promo);
+}
+
 @layer base {
   html {
     color-scheme: light;

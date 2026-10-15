@@ -80,16 +80,37 @@ are accepted, and a filled honeypot is rejected.
 - `lib/draft.ts` — the configuration state, shaped like the selection JSON from
   the first click, so submitting is assembly rather than translation. Kept in
   the URL (`?k=`, a shareable link) and localStorage.
-- `components/mock/` — the clickable mock site: home in the chosen section
-  order, listings (+ map), property detail (+ PENB badge, mortgage calculator),
-  blog. Colour from CSS variables, copy from the chosen tone
-  (`lib/tone-copy.ts`), photos generated as SVG (`Photo.tsx`) — nothing loads
-  from outside. Laid out with container queries, so the "Mobil" frame shows the
-  real phone layout with a hamburger menu.
+- `components/mock/` — the clickable mock site, **a hand port of the REALVISTA
+  theme** (`platform/packages/theme-realvista`: `styles/theme.css`,
+  `src/components`, `src/pages`): same sizes, spacing, DM Sans, and each
+  colourway's full token set (`lib/catalog.ts` → `--rv-*`), so indigo's pale
+  hero wash and crimson's gradient look as they will on the real site. Copy
+  comes from the chosen tone (`lib/tone-copy.ts`), photos are generated SVG
+  (`Photo.tsx`), nothing loads from outside. Container queries instead of media
+  queries, so the "Mobil" frame shows the phone layout. **When the theme
+  changes visibly, update the port.**
 - `components/configurator/` — the four steps, the preview frame, the summary,
   the debug panel. Each action tells the preview where to look: reorder a
   section and it scrolls there and highlights it; switch on the calculator and
   it opens a property detail.
+
+## The theme does not yet do everything the mock shows
+
+Checked against the theme source on 2026-10-15. The configurator sells these,
+so the theme (or the site template) must do them before the first client
+goes live:
+
+- **Map and mortgage calculator** — `features.listingMap` and
+  `features.mortgageCalculator` exist in the site config schema, but no theme
+  code reads them. The mock draws both in the theme's style.
+- **Blog switched off** — the theme always links `/blog` in its header and
+  footer. The mock drops the links when the blog is off.
+- **Phone menu** — the theme hides its nav below `md` and offers nothing in
+  its place, so a phone visitor cannot navigate. The mock has a menu button.
+- **Hero not first** — the theme renders its header inside the hero; when the
+  realtor moves the hero down, the header goes with it, and a second header is
+  appended after every section, at the bottom of the page. The mock keeps the
+  header at the top.
 
 ## Before it goes public
 

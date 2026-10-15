@@ -9,6 +9,8 @@ export interface MockListing {
   slug: string
   title: string
   location: string
+  /** Kraj, for the region chips above the grid. */
+  region: string
   price: number
   rent?: boolean
   area: number
@@ -28,6 +30,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'byt-3kk-praha-7',
     title: 'Byt 3+kk s balkonem',
     location: 'Praha 7 – Holešovice',
+    region: 'Hlavní město Praha',
     price: 8_450_000,
     area: 78,
     disposition: '3+kk',
@@ -44,6 +47,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'dum-5-1-brno-lisen',
     title: 'Rodinný dům 5+1 se zahradou',
     location: 'Brno – Líšeň',
+    region: 'Jihomoravský kraj',
     price: 12_900_000,
     area: 182,
     disposition: '5+1',
@@ -60,6 +64,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'byt-2kk-praha-10',
     title: 'Pronájem bytu 2+kk',
     location: 'Praha 10 – Vršovice',
+    region: 'Hlavní město Praha',
     price: 24_500,
     rent: true,
     area: 54,
@@ -76,6 +81,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'pozemek-ricany',
     title: 'Stavební pozemek',
     location: 'Říčany',
+    region: 'Středočeský kraj',
     price: 6_200_000,
     area: 1240,
     condition: 'Zasíťovaný',
@@ -89,6 +95,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'byt-4-1-ostrava',
     title: 'Byt 4+1 s lodžií',
     location: 'Ostrava – Poruba',
+    region: 'Moravskoslezský kraj',
     price: 4_350_000,
     area: 96,
     disposition: '4+1',
@@ -104,6 +111,7 @@ export const LISTINGS: MockListing[] = [
     slug: 'dum-4kk-plzen',
     title: 'Moderní dům 4+kk',
     location: 'Plzeň – Bory',
+    region: 'Plzeňský kraj',
     price: 9_800_000,
     area: 132,
     disposition: '4+kk',
@@ -116,6 +124,24 @@ export const LISTINGS: MockListing[] = [
     description: 'Úsporný bungalov z roku 2024 s fotovoltaikou, rekuperací a terasou na jih.',
   },
 ]
+
+/** The mock pretends to have a bigger catalogue than it shows, like a real office. */
+export const TOTAL_LISTINGS = 18
+
+export const AGENT = { name: 'Jan Novák', jobTitle: 'realitní makléř', phone: '+420 777 123 456' }
+
+export function regionCounts(): { label: string; count: number }[] {
+  const counts = new Map<string, number>()
+  for (const l of LISTINGS) counts.set(l.region, (counts.get(l.region) ?? 0) + 1)
+  return [...counts].map(([label, count]) => ({ label, count }))
+}
+
+/** 1 nemovitost, 2–4 nemovitosti, 5+ nemovitostí. */
+export function listingCount(n: number): string {
+  if (n === 1) return '1 nemovitost v nabídce'
+  if (n < 5) return `${n} nemovitosti v nabídce`
+  return `${n} nemovitostí v nabídce`
+}
 
 export interface MockPost {
   slug: string

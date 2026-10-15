@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Manrope } from 'next/font/google'
+import { DM_Sans, Fraunces, Manrope } from 'next/font/google'
 
 import './globals.css'
 
@@ -12,6 +12,14 @@ const heading = Fraunces({
   weight: ['500', '600'],
 })
 
+// The REALVISTA theme's face, used only inside the mock site.
+const rv = DM_Sans({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
+
 export const metadata: Metadata = {
   title: 'REALVISTA — weby pro realitní makléře',
   description:
@@ -22,7 +30,7 @@ export const viewport: Viewport = { themeColor: '#f6f4ef' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="cs" className={`${body.variable} ${heading.variable}`}>
+    <html lang="cs" className={`${body.variable} ${heading.variable} ${rv.variable}`}>
       <body>{children}</body>
     </html>
   )

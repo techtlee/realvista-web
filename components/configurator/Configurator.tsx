@@ -56,7 +56,8 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
   const panelRef = useRef<HTMLDivElement>(null)
 
   const theme = catalog.find((t) => t.name === draft.theme.name) ?? firstTheme
-  const swatch = theme.variants.find((v) => v.value === draft.theme.variant)?.swatch ?? '#222'
+  const variant = theme.variants.find((v) => v.value === draft.theme.variant) ?? theme.variants[0]!
+  const swatch = variant.swatch
 
   // Restore: a shared link wins over this browser's saved draft.
   useEffect(() => {
@@ -294,7 +295,7 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
           </button>
           {previewOpen && (
             <div className="mt-3 h-[34rem]">
-              <Preview draft={draft} swatch={swatch} focus={focus} initialDevice="mobile" />
+              <Preview draft={draft} variant={variant} focus={focus} initialDevice="mobile" />
             </div>
           )}
         </div>
@@ -370,7 +371,7 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
 
       <div className="hidden lg:block">
         <div className="sticky top-6 h-[min(44rem,calc(100vh-3rem))]">
-          <Preview draft={draft} swatch={swatch} focus={focus} />
+          <Preview draft={draft} variant={variant} focus={focus} />
         </div>
       </div>
 

@@ -14,10 +14,7 @@ async function open(page: Page, query = '') {
 
 test('colourway recolours the mock site', async ({ page }) => {
   await open(page)
-  const brand = () => mock(page).locator('> div').evaluate((el) => {
-    const s = getComputedStyle(el)
-    return (s.getPropertyValue('--rv-brand') || s.getPropertyValue('--mb')).trim()
-  })
+  const brand = () => mock(page).locator('> div').evaluate((el) => getComputedStyle(el).getPropertyValue('--rv-brand').trim())
   expect(await brand()).toBe('#0d0053')
   await page.getByText('Červená', { exact: true }).click()
   expect(await brand()).toBe('#ad0c14')
@@ -29,7 +26,7 @@ test('the mock can be navigated like the real site', async ({ page }) => {
   await expect(address(page)).toContainText('/nemovitosti')
   await mock(page).getByRole('button', { name: /Byt 3\+kk s balkonem/ }).first().click()
   await expect(address(page)).toContainText('/nemovitosti/byt-3kk-praha-7')
-  await mock(page).getByRole('button', { name: /Zpět na nabídku/ }).click()
+  await mock(page).getByRole('navigation', { name: 'Drobečková navigace' }).getByRole('button', { name: 'Nemovitosti' }).click()
   await expect(address(page)).toHaveText(/\/nemovitosti$/)
 })
 

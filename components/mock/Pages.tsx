@@ -1,36 +1,34 @@
-import { formatNumber, formatPrice, LISTINGS, POSTS } from '@/lib/mock-data'
+import { AGENT, formatNumber, formatPrice, LISTINGS, listingCount, POSTS, TOTAL_LISTINGS } from '@/lib/mock-data'
 import type { ToneCopy } from '@/lib/tone-copy'
 
-import { Container, ContactForm, ListingCard, MapPanel, MortgageCalculator, PenbBadge } from './parts'
+import { Container, ContactSection, MapPanel, MortgageCalculator, OutlineButton, PenbValue, PostCard, PropertyCard, SolidButton, SpecPill } from './parts'
 import { Photo } from './Photo'
 import type { Navigate } from './types'
 
-export function Listings({ map, navigate }: { map: boolean; navigate: Navigate }) {
+/* Ports of RealvistaListingIndex, RealvistaPropertyDetail, RealvistaBlogIndex
+ * and RealvistaPostDetail. The header and footer come from MockSite. */
+
+interface Shared {
+  copy: ToneCopy
+  email: string
+  navigate: Navigate
+}
+
+export function Listings({ map, copy, email, navigate }: Shared & { map: boolean }) {
   return (
-    <Container className="py-10 @3xl:py-14">
-      <h1 className="text-3xl font-semibold tracking-tight">Nabídka nemovitostí</h1>
-      <div className="mt-5 flex flex-wrap gap-2 text-sm">
-        {['Vše', 'Prodej', 'Pronájem', 'Byty', 'Domy', 'Pozemky'].map((f, i) => (
-          <span
-            key={f}
-            className={`rounded-full border px-3.5 py-1.5 ${
-              i === 0 ? 'border-[var(--mb)] bg-[var(--mb)] text-white' : 'border-neutral-300 text-neutral-700'
-            }`}
-          >
-            {f}
-          </span>
-        ))}
-      </div>
-      <div className={`mt-8 grid gap-6 ${map ? '@3xl:grid-cols-[1fr_340px]' : ''}`}>
-        {map && <MapPanel className="h-56 @3xl:order-2 @3xl:sticky @3xl:top-4 @3xl:h-[520px]" />}
-        <div className={`grid gap-5 @xl:grid-cols-2 ${map ? '' : '@3xl:grid-cols-3'}`}>
+    <>
+      <Container className="py-[90px]">
+        <h1 className="text-[30px] font-medium leading-[36px] text-rv-brand">Nabídka nemovitostí</h1>
+        <p className="rv-track mt-4 text-[16px] leading-[20px] text-rv-brand">{listingCount(TOTAL_LISTINGS)}</p>
+        {map && <MapPanel className="mt-[50px] h-[260px] @5xl:h-[380px]" />}
+        <div className="mt-[50px] grid gap-5 @3xl:grid-cols-2 @7xl:grid-cols-3">
           {LISTINGS.map((l) => (
-            <ListingCard key={l.slug} listing={l} navigate={navigate} />
+            <PropertyCard key={l.slug} listing={l} navigate={navigate} />
           ))}
         </div>
-      </div>
-      <p className="mt-8 text-center text-sm text-neutral-500">Zobrazeno {LISTINGS.length} z {LISTINGS.length} nemovitostí</p>
-    </Container>
+      </Container>
+      <ContactSection title={copy.ctaTitle} button={copy.contactButton} email={email} />
+    </>
   )
 }
 
@@ -38,153 +36,216 @@ export function Detail({
   slug,
   map,
   calculator,
-  brand,
   copy,
+  email,
   navigate,
-}: {
-  slug: string
-  map: boolean
-  calculator: boolean
-  brand: string
-  copy: ToneCopy
-  navigate: Navigate
-}) {
+}: Shared & { slug: string; map: boolean; calculator: boolean }) {
   const l = LISTINGS.find((x) => x.slug === slug) ?? LISTINGS[0]!
-  const params = [
-    ['Cena', formatPrice(l)],
-    ['Dispozice', l.disposition],
-    ['Plocha', `${formatNumber(l.area)} m²`],
-    ['Podlaží', l.floor],
-    ['Stav', l.condition],
-    ['Vlastnictví', l.ownership],
-  ].filter((p): p is [string, string] => Boolean(p[1]))
   const similar = LISTINGS.filter((x) => x.slug !== l.slug).slice(0, 3)
+  const perM2 = l.rent ? null : `${formatNumber(Math.round(l.price / l.area))} Kč/m²`
+
+  const rows: [string, React.ReactNode][] = [
+    ['Dispozice', l.disposition],
+    [l.kind === 'land' ? 'Plocha pozemku' : 'Užitná plocha', `${formatNumber(l.area)} m²`],
+    ['Podlaží', l.floor],
+    ['Stav nemovitosti', l.condition],
+    ['Vlastnictví', l.ownership],
+    ['Energetická náročnost', <PenbValue key="penb" penb={l.penb} />],
+  ]
+  const params = rows.filter(([, v]) => Boolean(v))
+
+  const pills = [`${formatNumber(l.area)} m²`, l.disposition && `Dispozice ${l.disposition}`, `${l.ownership} vlastnictví`].filter(
+    Boolean,
+  ) as string[]
 
   return (
-    <Container className="py-8 @3xl:py-12">
-      <button type="button" onClick={() => navigate({ page: 'listings' })} className="text-sm text-neutral-500 hover:text-[var(--mb)]">
-        ← Zpět na nabídku
-      </button>
+    <>
+      <Container className="pt-[40px]">
+        <nav aria-label="Drobečková navigace" className="flex flex-wrap items-center gap-2 text-[14px] leading-[18px] text-rv-muted">
+          <button type="button" onClick={() => navigate({ page: 'listings' })} className="hover:text-rv-brand">
+            Nemovitosti
+          </button>
+          <span>›</span>
+          <span>{l.location}</span>
+          <span>›</span>
+          <span className="font-medium text-rv-brand">{l.title}</span>
+        </nav>
+      </Container>
 
-      <div className="mt-4 grid gap-2 @3xl:grid-cols-[2fr_1fr] @3xl:grid-rows-2">
-        <div className="aspect-[16/10] overflow-hidden rounded-lg @3xl:row-span-2 @3xl:aspect-auto">
-          <Photo kind={l.kind} seed={l.seed} />
+      <Container className="mt-[38px]">
+        <div className="grid gap-5 @5xl:grid-cols-[640px_1fr]">
+          <div className="h-[320px] overflow-hidden rounded-rv-btn bg-rv-accent @2xl:h-[500px]">
+            <Photo kind={l.kind} seed={l.seed} />
+          </div>
+          <div className="grid gap-5 @2xl:grid-cols-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-[150px] overflow-hidden rounded-rv-btn bg-rv-accent @2xl:h-[240px]">
+                <Photo kind="interior" seed={l.seed + i} />
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="hidden overflow-hidden rounded-lg @3xl:block">
-          <Photo kind="interior" seed={l.seed + 1} />
+        <div className="mt-5 flex justify-end">
+          <div className="flex h-[50px] w-full items-center justify-between rounded-rv-btn bg-rv-brand px-[30px] @2xl:w-[310px]">
+            <span className="text-[16px] font-bold leading-[20px] text-white">Všechny fotky</span>
+            <span className="text-[16px] font-bold leading-[20px] text-white opacity-60">+14</span>
+          </div>
         </div>
-        <div className="relative hidden overflow-hidden rounded-lg @3xl:block">
-          <Photo kind="interior" seed={l.seed + 2} />
-          <span className="absolute inset-0 grid place-items-center bg-black/40 text-sm font-semibold text-white">+ 14 fotografií</span>
-        </div>
-      </div>
+      </Container>
 
-      <div className="mt-8 grid gap-10 @3xl:grid-cols-[1fr_340px]">
+      <Container className="mt-[50px]">
+        <div className="flex flex-wrap items-start justify-between gap-6 rounded-rv-btn bg-rv-card px-5 py-[30px] shadow-rv-card @2xl:px-[50px]">
+          <div>
+            <h1 className="max-w-[595px] text-[30px] font-medium leading-[36px] text-rv-brand">{l.title}</h1>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {pills.map((p) => (
+                <SpecPill key={p}>{p}</SpecPill>
+              ))}
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[30px] font-bold leading-[39px] text-rv-brand">{formatPrice(l)}</p>
+            {perM2 && <p className="text-[14px] leading-[18px] text-rv-muted">{perM2}</p>}
+          </div>
+        </div>
+      </Container>
+
+      <Container className="mt-[100px] grid gap-[60px] @5xl:grid-cols-[640px_1fr] @5xl:gap-[130px]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-[var(--mb)]">{l.rent ? 'Pronájem' : 'Prodej'}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{l.title}</h1>
-          <p className="mt-1 text-neutral-500">{l.location}</p>
-          <p className="mt-4 text-3xl font-semibold text-[var(--mb)]">{formatPrice(l)}</p>
-
-          <dl className="mt-8 grid grid-cols-2 gap-x-8 border-t border-neutral-200 @xl:grid-cols-3">
+          <h2 className="text-[30px] font-medium leading-[39px] text-rv-brand">Popis nemovitosti</h2>
+          <p className="mt-[50px] text-[16px] leading-[26px] text-rv-brand">{l.description}</p>
+          <h2 className="mt-[100px] text-[30px] font-medium leading-[39px] text-rv-brand">Parametry nemovitosti</h2>
+          <dl className="mt-[25px] border-t border-rv-accent">
             {params.map(([k, v]) => (
-              <div key={k} className="border-b border-neutral-200 py-3">
-                <dt className="text-xs text-neutral-500">{k}</dt>
-                <dd className="mt-0.5 font-medium">{v}</dd>
+              <div key={k} className="flex justify-between gap-6 border-b border-rv-accent py-[14px]">
+                <dt className="text-[16px] leading-[21px] text-rv-muted">{k}</dt>
+                <dd className="text-right text-[16px] font-medium leading-[21px] text-rv-brand">{v}</dd>
               </div>
             ))}
           </dl>
-          <div className="mt-5">
-            <PenbBadge penb={l.penb} />
-          </div>
-
-          <h2 className="mt-8 text-xl font-semibold">Popis</h2>
-          <p className="mt-3 leading-relaxed text-neutral-600">{l.description}</p>
-
-          {map && (
-            <>
-              <h2 className="mt-8 text-xl font-semibold">Poloha</h2>
-              <MapPanel pins={1} className="mt-3 h-56" />
-            </>
-          )}
         </div>
 
-        <aside className="space-y-5">
-          <div className="rounded-lg border border-neutral-200 bg-white p-5">
-            <div className="flex items-center gap-3">
-              <span className="h-12 w-12 overflow-hidden rounded-full">
+        <div className="space-y-10">
+          <aside className="h-fit rounded-rv-btn bg-rv-card p-[40px] shadow-rv-card">
+            <p className="text-center text-[30px] font-medium leading-[39px] text-rv-brand">Máte zájem o prohlídku?</p>
+            <div className="mt-[18px] flex items-center gap-[30px]">
+              <span className="h-20 w-20 shrink-0 overflow-hidden rounded-rv-btn">
                 <Photo kind="person" seed={5} />
               </span>
               <div>
-                <p className="font-semibold">{brand}</p>
-                <p className="text-sm text-neutral-500">+420 777 123 456</p>
+                <p className="text-[16px] font-bold leading-[21px] text-rv-brand">{AGENT.name}</p>
+                <p className="mt-1 text-[16px] leading-[21px] text-rv-muted">{AGENT.jobTitle}</p>
               </div>
             </div>
-            <div className="mt-4">
-              <ContactForm button={copy.contactButton} compact />
+            <div className="mt-[40px] flex flex-wrap gap-3">
+              <SolidButton onClick={() => navigate({ page: 'home' }, 'contact')} className="flex-1">
+                Domluvit prohlídku
+              </SolidButton>
+              <OutlineButton className="flex-1">Zavolat makléři</OutlineButton>
             </div>
-          </div>
+            <div className="mt-[60px] flex flex-wrap gap-x-12 gap-y-3 text-[16px] font-medium leading-[21px] text-rv-brand">
+              <p>{AGENT.phone}</p>
+              <p>{email}</p>
+            </div>
+          </aside>
           {calculator && !l.rent && (
             <div data-mock-section="calculator">
               <MortgageCalculator price={l.price} />
             </div>
           )}
-        </aside>
-      </div>
+        </div>
+      </Container>
 
-      <h2 className="mt-14 text-xl font-semibold">Podobné nemovitosti</h2>
-      <div className="mt-5 grid gap-5 @xl:grid-cols-2 @3xl:grid-cols-3">
-        {similar.map((s) => (
-          <ListingCard key={s.slug} listing={s} navigate={navigate} />
-        ))}
+      <Container className="mt-[100px]">
+        <h2 className="text-[30px] font-medium leading-[39px] text-rv-brand">Lokalita</h2>
+        <p className="mt-[50px] max-w-[640px] text-[16px] leading-[24px] text-rv-brand">
+          {l.location}. Přesná adresa je k dispozici na vyžádání.
+        </p>
+        {map && <MapPanel pins={1} className="mt-[30px] h-[300px]" />}
+      </Container>
+
+      <Container className="mt-[100px]">
+        <h2 className="text-[30px] font-medium leading-[39px] text-rv-brand">Podobné nemovitosti</h2>
+        <p className="mt-2 text-[16px] leading-[21px] text-rv-muted">Prohlédněte si další exkluzivní nemovitosti v okolí.</p>
+        <div className="mt-[50px] grid gap-5 @3xl:grid-cols-2 @7xl:grid-cols-3">
+          {similar.map((s) => (
+            <PropertyCard key={s.slug} listing={s} navigate={navigate} />
+          ))}
+        </div>
+      </Container>
+
+      <div className="mt-[150px]">
+        <ContactSection title={copy.ctaTitle} button={copy.contactButton} email={email} />
       </div>
-    </Container>
+    </>
   )
 }
 
 export function BlogIndex({ navigate }: { navigate: Navigate }) {
   return (
-    <Container className="py-10 @3xl:py-14">
-      <h1 className="text-3xl font-semibold tracking-tight">Blog</h1>
-      <div className="mt-8 grid gap-8 @3xl:grid-cols-3">
-        {POSTS.map((p) => (
-          <button key={p.slug} type="button" onClick={() => navigate({ page: 'post', slug: p.slug })} className="group text-left">
-            <div className="aspect-[16/10] overflow-hidden rounded-lg">
-              <Photo kind="interior" seed={p.seed} className="transition duration-500 group-hover:scale-105" />
-            </div>
-            <p className="mt-3 text-xs text-neutral-500">{p.date}</p>
-            <p className="mt-1 text-lg font-semibold group-hover:text-[var(--mb)]">{p.title}</p>
-            <p className="mt-1 text-sm text-neutral-600">{p.excerpt}</p>
-          </button>
-        ))}
-      </div>
-    </Container>
+    <>
+      <Container className="pt-[90px]">
+        <h1 className="max-w-[900px] text-[40px] font-medium leading-[1.12] text-rv-brand @2xl:text-[60px] @2xl:leading-[67px]">
+          Vědomosti a praxe
+        </h1>
+        <p className="rv-track mt-5 max-w-[640px] text-[16px] leading-[22px] text-rv-brand">
+          Zkušenosti z trhu, hloubkové analýzy a praktické tipy k prodeji i pronájmu.
+        </p>
+      </Container>
+      <Container className="pb-[150px] pt-[50px]">
+        <div className="grid gap-5 @3xl:grid-cols-2 @7xl:grid-cols-3">
+          {POSTS.map((p) => (
+            <PostCard key={p.slug} post={p} navigate={navigate} />
+          ))}
+        </div>
+      </Container>
+    </>
   )
 }
 
 export function Post({ slug, navigate }: { slug: string; navigate: Navigate }) {
   const p = POSTS.find((x) => x.slug === slug) ?? POSTS[0]!
+  const recent = POSTS.filter((x) => x.slug !== p.slug)
   return (
-    <Container className="max-w-[760px] py-10 @3xl:py-14">
-      <button type="button" onClick={() => navigate({ page: 'blog' })} className="text-sm text-neutral-500 hover:text-[var(--mb)]">
-        ← Všechny články
-      </button>
-      <p className="mt-6 text-sm text-neutral-500">{p.date}</p>
-      <h1 className="mt-1 text-3xl font-semibold tracking-tight @3xl:text-4xl">{p.title}</h1>
-      <p className="mt-4 text-lg text-neutral-600">{p.excerpt}</p>
-      <div className="mt-8 aspect-[16/9] overflow-hidden rounded-lg">
-        <Photo kind="interior" seed={p.seed} />
-      </div>
-      <div className="mt-8 space-y-4 leading-relaxed text-neutral-700">
-        <p>
-          Tady bude váš článek. Blog píšete sami v administraci webu — stačí nadpis, pár odstavců a fotka. Pravidelné
-          články přivádějí návštěvníky z vyhledávačů a ukazují, že trhu rozumíte.
-        </p>
-        <p>
-          Každý článek dostane vlastní adresu, náhled pro sdílení na sociálních sítích a objeví se na úvodní stránce v
-          sekci Blog.
-        </p>
-      </div>
-    </Container>
+    <>
+      <Container className="pt-[40px]">
+        <nav aria-label="Drobečková navigace" className="flex flex-wrap items-center gap-2 text-[14px] leading-[18px] text-rv-muted">
+          <button type="button" onClick={() => navigate({ page: 'blog' })} className="hover:text-rv-brand">
+            Blog
+          </button>
+          <span>›</span>
+          <span className="font-medium text-rv-brand">{p.title}</span>
+        </nav>
+      </Container>
+      <Container className="pt-[40px]">
+        <h1 className="max-w-[900px] text-[40px] font-medium leading-[1.12] text-rv-brand @2xl:text-[60px] @2xl:leading-[67px]">
+          {p.title}
+        </h1>
+        <p className="rv-track mt-5 text-[16px] leading-[20px] text-rv-muted">{p.date}</p>
+      </Container>
+      <Container className="mt-[50px]">
+        <div className="h-[320px] overflow-hidden rounded-rv-btn bg-rv-accent @2xl:h-[500px]">
+          <Photo kind="interior" seed={p.seed} />
+        </div>
+      </Container>
+      <Container className="mt-[60px] max-w-[760px]">
+        <p className="text-[22px] font-medium leading-[32px] text-rv-brand">{p.excerpt}</p>
+        <div className="mt-[40px] space-y-4 text-[16px] leading-[26px] text-rv-brand">
+          <p>
+            Tady bude váš článek. Blog píšete sami v administraci webu — stačí nadpis, pár odstavců a fotka. Pravidelné
+            články přivádějí návštěvníky z vyhledávačů a ukazují, že trhu rozumíte.
+          </p>
+          <p>Každý článek dostane vlastní adresu a náhled pro sdílení na sociálních sítích.</p>
+        </div>
+      </Container>
+      <Container className="mt-[150px] pb-[150px]">
+        <h2 className="text-[30px] font-medium leading-[36px] text-rv-brand">Další články</h2>
+        <div className="mt-[50px] grid gap-5 @3xl:grid-cols-2 @7xl:grid-cols-3">
+          {recent.map((r) => (
+            <PostCard key={r.slug} post={r} navigate={navigate} />
+          ))}
+        </div>
+      </Container>
+    </>
   )
 }

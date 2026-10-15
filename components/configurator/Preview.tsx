@@ -5,14 +5,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { slug } from '@/components/mock/Home'
 import { MockSite } from '@/components/mock/MockSite'
 import { routePath, type MockRoute, type Navigate } from '@/components/mock/types'
+import type { CatalogVariant } from '@/lib/catalog'
 import type { Draft } from '@/lib/draft'
 
 type Device = 'desktop' | 'mobile'
 
 /** Logical widths the mock is laid out at, then scaled to fit the panel. */
-// 1024 rather than 1280: still the desktop layout (it breaks at 768), but the
-// mock scales down less, so its text stays readable in a half-width panel.
-const DEVICE_WIDTH: Record<Device, number> = { desktop: 1024, mobile: 390 }
+// 1280 is REALVISTA's design width, where its xl layout (three-column grids)
+// applies. Its type is large enough (60px headings) to read when scaled.
+const DEVICE_WIDTH: Record<Device, number> = { desktop: 1280, mobile: 390 }
 
 /**
  * Where the preview should show the effect of the realtor's last action:
@@ -27,12 +28,12 @@ export interface PreviewFocus {
 
 export function Preview({
   draft,
-  swatch,
+  variant,
   focus,
   initialDevice = 'desktop',
 }: {
   draft: Draft
-  swatch: string
+  variant: CatalogVariant
   focus: PreviewFocus | null
   initialDevice?: Device
 }) {
@@ -148,7 +149,7 @@ export function Preview({
               transformOrigin: 'top left',
             }}
           >
-            <MockSite draft={draft} swatch={swatch} route={route} highlight={highlight} navigate={navigate} />
+            <MockSite draft={draft} variant={variant} route={route} highlight={highlight} navigate={navigate} />
           </div>
         )}
       </div>
