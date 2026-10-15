@@ -63,6 +63,10 @@ and no CORS is needed.
 | unset | JSON logged to the terminal, form reports success | 503 — never pretend a lead arrived |
 | set | forwarded, backend's answer returned | same |
 
+For a shared preview with no backend, set `NEXT_PUBLIC_DEMO_MODE=1`: submits
+succeed without being sent, and a banner on the page says so. It overrides
+`LEAD_ENDPOINT` and must never be set on the real production deployment.
+
 Backend validation errors come back as zod issues; `lib/issues.ts` maps each to
 a Czech message and the step that fixes it.
 

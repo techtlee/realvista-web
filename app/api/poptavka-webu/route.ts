@@ -11,12 +11,19 @@
  * instead — a deployed page must never tell a realtor their enquiry arrived
  * when it went nowhere.
  */
+import { DEMO_MODE } from '@/lib/demo'
+
 const MAX_BODY_BYTES = 32 * 1024
 
 export async function POST(request: Request): Promise<Response> {
   const raw = await request.text()
   if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
     return Response.json({ error: 'Payload too large' }, { status: 413 })
+  }
+
+  if (DEMO_MODE) {
+    console.log('[poptavka-webu] demo mode — lead not sent:\n' + pretty(raw))
+    return Response.json({ id: 'demo', delivered: false }, { status: 201 })
   }
 
   const endpoint = process.env.LEAD_ENDPOINT

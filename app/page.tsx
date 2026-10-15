@@ -4,10 +4,16 @@ import { Faq } from '@/components/landing/Faq'
 import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { catalog } from '@/lib/catalog'
+import { DEMO_MODE } from '@/lib/demo'
 
 export default function Home() {
   return (
     <>
+      {DEMO_MODE && (
+        <p className="bg-ink px-4 py-2 text-center text-xs text-white">
+          Ukázkový režim — poptávky se nikam neodesílají.
+        </p>
+      )}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <a href="/" className="font-display text-xl font-semibold tracking-tight">
           REALVISTA

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Catalog } from '@/lib/catalog'
 import { CONSENT_TEXT } from '@/lib/consent'
+import { DEMO_MODE } from '@/lib/demo'
 import {
   decodeDraft,
   DRAFT_PARAM,
@@ -229,6 +230,11 @@ export function Configurator({ catalog }: { catalog: Catalog }) {
           Konfiguraci webu <strong className="text-ink">{draft.brand.name}</strong> jsme si uložili. Do jednoho
           pracovního dne se vám ozveme na <strong className="text-ink">{contact.email}</strong>.
         </p>
+        {DEMO_MODE && (
+          <p className="mt-4 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-ink-soft">
+            Toto je ukázka — poptávka nebyla nikam odeslána.
+          </p>
+        )}
       </div>
     )
   }
