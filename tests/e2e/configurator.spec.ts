@@ -9,6 +9,10 @@ const homeSections = (page: Page) =>
 
 async function open(page: Page, query = '') {
   await page.goto(`/${query}`)
+  // The draft lands in the URL only once the configurator has hydrated.
+  // Clicking before that registers nothing — the one flake this suite had,
+  // seen while the dev server was recompiling.
+  await expect(page).toHaveURL(/[?&]k=/)
   await page.locator('#konfigurator').scrollIntoViewIfNeeded()
 }
 
