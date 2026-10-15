@@ -9,9 +9,8 @@ export default function Home() {
   return (
     <>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-        {/* Product name is still undecided — see PROJECT-BRIEF "Open questions". */}
         <a href="/" className="font-display text-xl font-semibold tracking-tight">
-          Makléři
+          REALVISTA
         </a>
         <a href="#konfigurator" className="text-sm font-medium underline-offset-4 hover:underline">
           Nastavit web
@@ -38,7 +37,7 @@ export default function Home() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-ink-soft sm:px-6">
-          <span>© {new Date().getFullYear()} Makléři</span>
+          <span>© {new Date().getFullYear()} REALVISTA</span>
           {/* The privacy page is required before launch — the consent text must link to it. */}
           <span>Zásady ochrany osobních údajů připravujeme</span>
         </div>

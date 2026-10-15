@@ -1,4 +1,4 @@
-# Makléři — storefront
+# REALVISTA — storefront (realvista.cz)
 
 The public landing page and site configurator. A realtor picks a template and
 colourway, switches modules on and off, orders the homepage sections, names
@@ -93,4 +93,3 @@ are accepted, and a filled honeypot is rejected.
 - **Rate limiting** on `/api/poptavka-webu` (Vercel firewall or Turnstile).
 - **Consent wording** in `lib/consent.ts` is a placeholder: needs legal review,
   the controller's name and IČO, and a privacy policy page to link to.
-- **Product name and domain** — "Makléři" in the header is a stand-in.

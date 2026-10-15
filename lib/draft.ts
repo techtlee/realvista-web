@@ -157,7 +157,7 @@ export function decodeDraft(value: string): unknown {
 }
 
 export const DRAFT_PARAM = PARAM
-export const DRAFT_STORAGE_KEY = 'makleri:konfigurace:v1'
+export const DRAFT_STORAGE_KEY = 'realvista:konfigurace:v1'
 
 function bool(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback

@@ -13,7 +13,7 @@ const heading = Fraunces({
 })
 
 export const metadata: Metadata = {
-  title: 'Weby pro realitní makléře',
+  title: 'REALVISTA — weby pro realitní makléře',
   description:
     'Vyberte si šablonu, nastavte barvy a sekce a podívejte se, jak bude váš realitní web vypadat. Spuštění na vaší vlastní doméně.',
 }
