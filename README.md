@@ -13,7 +13,12 @@ Standalone: no CMS, no other repo, nothing to run alongside it.
 ```bash
 pnpm install
 pnpm dev        # http://localhost:3004
+pnpm test       # unit tests: draft, JSON, error mapping
+pnpm test:e2e   # browser tests: configure → click through the mock → submit
 ```
+
+`test:e2e` uses the installed Google Chrome. With Playwright's own browser
+instead: `PW_CHANNEL= pnpm test:e2e` after `pnpm exec playwright install chromium`.
 
 Port 3004 because 3000 is the CMS, 3001 the demo site, 3002 the CRM dashboard.
 
